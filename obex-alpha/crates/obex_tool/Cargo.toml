@@ -1,0 +1,18 @@
+[package]
+name = "obex_tool"
+version = "1.0.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+obex_primitives = { path = "../obex_primitives" }
+obex_alpha_i = { path = "../obex_alpha_i" }
+obex_alpha_ii = { path = "../obex_alpha_ii" }
+obex_alpha_iii = { path = "../obex_alpha_iii" }
+hex = "0.4"
+clap = { version = "4.5", features = ["derive"] }
+reqwest = { version = "0.12", features = ["json", "blocking"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+

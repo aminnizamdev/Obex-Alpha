@@ -1,0 +1,12 @@
+[package]
+name = "obex_alpha_t"
+version = "1.0.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+obex_primitives = { path = "../obex_primitives" }
+primitive-types = "0.12.2"
+thiserror = "1.0"
+
+

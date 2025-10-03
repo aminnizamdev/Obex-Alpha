@@ -1,0 +1,19 @@
+[package]
+name = "obex_alpha_ii"
+version = "1.0.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+obex_primitives = { path = "../obex_primitives" }
+thiserror = "1.0"
+
+[dev-dependencies]
+proptest = "1.4"
+criterion = "0.5"
+
+[[bench]]
+name = "header_validate"
+harness = false
+
+

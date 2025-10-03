@@ -1,0 +1,24 @@
+[workspace]
+members = [
+    "crates/obex_primitives",
+    "crates/obex_alpha_i",
+    "crates/obex_alpha_ii",
+    "crates/obex_alpha_iii",
+    "crates/obex_alpha_t",
+    "crates/e2e",
+    "crates/obex_node",
+    "crates/obex_tool",
+]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+license = "MIT OR Apache-2.0"
+version = "1.0.0"
+authors = ["Obex Labs <engineering@obex.example>"]
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+warnings = "deny"
+
+

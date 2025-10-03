@@ -1,0 +1,19 @@
+# OBEX Alpha — Testnet Genesis (Beacon v1)
+
+network_id = "obex-alpha-testnet"
+
+[versions]
+alpha_i = 1
+alpha_ii = 2
+alpha_iii = 1
+alpha_t = 1
+
+[beacon]
+# y_core is a 32-byte hex string (no 0x prefix)
+y_core = "0000000000000000000000000000000000000000000000000000000000000003"
+# For beacon v1, pi and ell are empty; y_edge = H("obex.vdf.edge", [y_core])
+
+[genesis_header]
+slot = 0
+parent_id = "0000000000000000000000000000000000000000000000000000000000000000"
+# ticket_root/part_root/txroot_prev default to empty Merkle root at runtime

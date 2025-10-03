@@ -1,0 +1,11 @@
+[package]
+name = "obex_alpha_iii"
+version = "1.0.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+obex_primitives = { path = "../obex_primitives" }
+ed25519-dalek = { version = "2.1", default-features = false, features = ["pkcs8"] }
+
+

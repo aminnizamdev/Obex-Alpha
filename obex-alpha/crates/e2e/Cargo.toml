@@ -1,0 +1,17 @@
+[package]
+name = "obex_e2e"
+version = "1.0.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+obex_primitives = { path = "../obex_primitives" }
+obex_alpha_i = { path = "../obex_alpha_i" }
+obex_alpha_ii = { path = "../obex_alpha_ii" }
+obex_alpha_iii = { path = "../obex_alpha_iii" }
+obex_alpha_t = { path = "../obex_alpha_t" }
+
+[dev-dependencies]
+hex = "0.4"
+
+
