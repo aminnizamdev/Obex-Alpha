@@ -1,0 +1,470 @@
+openapi: 3.1.0
+info:
+  title: OBEX Alpha Public API
+  version: v1
+servers:
+  - url: http://localhost:8080
+paths:
+  /v1/info:
+    get:
+      summary: Chain and node info
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InfoDto'
+  /v1/head:
+    get:
+      summary: Head slot and header_id
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HeadDto'
+  /v1/headers:
+    get:
+      summary: Headers range with pagination
+      parameters:
+        - in: query
+          name: from
+          schema: { type: integer, format: int64 }
+        - in: query
+          name: to
+          schema: { type: integer, format: int64 }
+        - in: query
+          name: limit
+          schema: { type: integer, format: int32 }
+        - in: query
+          name: cursor
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HeadersPage'
+  /v1/slot/{slot}:
+    get:
+      summary: Slot summary
+      parameters:
+        - in: path
+          name: slot
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SlotSummary'
+  /v1/alpha_iii/{slot}:
+    get:
+      summary: Tickets in JSON
+      parameters:
+        - in: path
+          name: slot
+          required: true
+          schema: { type: integer, format: int64 }
+        - in: query
+          name: limit
+          schema: { type: integer, format: int32 }
+        - in: query
+          name: cursor
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketsPage'
+  /v1/alpha_i_index/{slot}:
+  /v1/search:
+    get:
+      summary: Search by txid|header_id|pk|slot
+      parameters:
+        - in: query
+          name: q
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchDto'
+  /v1/peers:
+    get:
+      summary: Peer list (public)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PeersDto'
+  /v1/stats/supply:
+    get:
+      summary: Supply schedule snapshot
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupplyStats'
+  /v1/stats/participation:
+    get:
+      summary: Participation counts
+      parameters:
+        - in: query
+          name: from
+          schema: { type: integer, format: int64 }
+        - in: query
+          name: to
+          schema: { type: integer, format: int64 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParticipationStats'
+  /v1/stats/fees:
+    get:
+      summary: Fees by slot
+      parameters:
+        - in: query
+          name: from
+          schema: { type: integer, format: int64 }
+        - in: query
+          name: to
+          schema: { type: integer, format: int64 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeesStats'
+  /v1/fees:
+    get:
+      summary: Fee rule
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeesRule'
+  /v1/subscribe:
+    get:
+      summary: SSE stream for newHead and ticketAdmitted
+      responses:
+        '200':
+          description: text/event-stream
+    get:
+      summary: Participant PKs JSON
+      parameters:
+        - in: path
+          name: slot
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlphaIIndexJson'
+  /v1/proof/ticket/{slot}/{txid}:
+    get:
+      summary: Ticket inclusion proof
+      parameters:
+        - in: path
+          name: slot
+          required: true
+          schema: { type: integer, format: int64 }
+        - in: path
+          name: txid
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProofDto'
+  /v1/participant/{slot}/{pk}:
+    get:
+      summary: Participant proof
+      parameters:
+        - in: path
+          name: slot
+          required: true
+          schema: { type: integer, format: int64 }
+        - in: path
+          name: pk
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProofDto'
+  /v1/ticket/{txid}:
+    get:
+      summary: Resolve ticket by txid
+      parameters:
+        - in: path
+          name: txid
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketResolve'
+  /v1/account/{pk}:
+    get:
+      summary: Account snapshot
+      parameters:
+        - in: path
+          name: pk
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountDto'
+  /v1/tx:
+    post:
+      summary: Submit transaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TxSubmitBody'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TxSubmitResp'
+  /v1/tx/{txid}:
+    get:
+      summary: Transaction status
+      parameters:
+        - in: path
+          name: txid
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TxStatusDto'
+components:
+  schemas:
+    InfoDto:
+      type: object
+      properties:
+        chain_id: { type: string }
+        genesis_hash: { type: string }
+        obex_version: { type: integer }
+        slots_per_sec: { type: integer }
+        head:
+          $ref: '#/components/schemas/HeadDto'
+        address_format: { type: string }
+    HeadDto:
+      type: object
+      properties:
+        slot: { type: integer, format: int64 }
+        header_id: { type: string }
+    HeaderViewDto:
+      type: object
+      properties:
+        parent_id: { type: string }
+        slot: { type: integer, format: int64 }
+        obex_version: { type: integer }
+        seed_commit: { type: string }
+        vdf_y_core: { type: string }
+        vdf_y_edge: { type: string }
+        vdf_pi: { type: string }
+        vdf_ell: { type: string }
+        ticket_root: { type: string }
+        part_root: { type: string }
+        txroot_prev: { type: string }
+        header_id: { type: string }
+    HeadersPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/HeaderViewDto'
+        next_cursor: { type: string, nullable: true }
+    SlotSummary:
+      type: object
+      properties:
+        slot: { type: integer, format: int64 }
+        header: { $ref: '#/components/schemas/HeaderViewDto' }
+        counts:
+          type: object
+          properties:
+            tickets: { type: integer }
+            participants: { type: integer }
+    TicketView:
+      type: object
+      properties:
+        ticket_id: { type: string }
+        txid: { type: string }
+        sender: { type: string }
+        nonce: { type: integer, format: int64 }
+        amount_u: { type: string }
+        fee_u: { type: string }
+        s_admit: { type: integer, format: int64 }
+        s_exec: { type: integer, format: int64 }
+        commit_hash: { type: string }
+    TicketsPage:
+      type: object
+      properties:
+        slot: { type: integer, format: int64 }
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/TicketView' }
+        next_cursor: { type: string, nullable: true }
+    AlphaIIndexJson:
+      type: object
+      properties:
+        slot: { type: integer, format: int64 }
+        participants:
+          type: array
+          items: { type: string }
+        count: { type: integer }
+    ProofDto:
+      type: object
+      properties:
+        leaf: { type: string }
+        siblings:
+          type: array
+          items: { type: string }
+        index: { type: integer, format: int64 }
+        root: { type: string }
+    TicketResolve:
+      type: object
+      properties:
+        slot: { type: integer, format: int64 }
+        ticket: { $ref: '#/components/schemas/TicketView' }
+        proof: { $ref: '#/components/schemas/ProofDto' }
+    AccountDto:
+      type: object
+      properties:
+        pk: { type: string }
+        spendable_u: { type: string }
+        reserved_u: { type: string }
+        next_nonce: { type: integer, format: int64 }
+    TxSubmitBody:
+      type: object
+      properties:
+        tx_body_v1: { type: object }
+        signature: { type: string }
+      required: [tx_body_v1, signature]
+    TxSubmitResp:
+      type: object
+      properties:
+        txid: { type: string }
+        commit_hash: { type: string }
+        accepted: { type: boolean }
+        reason: { type: string, nullable: true }
+    TxStatusDto:
+      type: object
+    SearchDto:
+      type: object
+      properties:
+        query: { type: string }
+        result:
+          oneOf:
+            - type: object
+              properties:
+                type: { type: string, enum: [slot] }
+                slot: { type: integer, format: int64 }
+            - type: object
+              properties:
+                type: { type: string, enum: [header] }
+                slot: { type: integer, format: int64 }
+                header_id: { type: string }
+            - type: object
+              properties:
+                type: { type: string, enum: [tx] }
+                slot: { type: integer, format: int64 }
+                txid: { type: string }
+            - type: object
+              properties:
+                type: { type: string, enum: [account] }
+                pk: { type: string }
+    PeersDto:
+      type: object
+      properties:
+        count: { type: integer }
+        peers:
+          type: array
+          items: { type: string }
+    SupplyStats:
+      type: object
+      properties:
+        slots_elapsed: { type: integer, format: int64 }
+        scheduled_emitted_u: { type: string }
+        total_supply_u: { type: string }
+        halving_period_years: { type: integer }
+    ParticipationStats:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              slot: { type: integer, format: int64 }
+              count: { type: integer }
+    FeesStats:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              slot: { type: integer, format: int64 }
+              total_fees_u: { type: string }
+    FeesRule:
+      type: object
+      properties:
+        min_tx_u: { type: string }
+        flat_switch_u: { type: string }
+        flat_fee_u: { type: string }
+        rule: { type: string }
+      properties:
+        txid: { type: string }
+        status: { type: string }
+        slot: { type: integer, format: int64, nullable: true }
+

@@ -63,19 +63,81 @@ Responsibilities
 - HTTP API: minimal endpoints for body fetch and header operations
 - Observability: JSON logs (structured), OpenMetrics endpoint, health check
 
-HTTP endpoints (minimal)
+HTTP API (legacy + v1)
 
-- `GET /alpha_i/{slot}/{pk}` → canonical α‑I `ObexPartRec` bytes
-- `GET /alpha_iii/{slot}` → concatenated canonical `TicketRecord` leaf bytes (216‑byte leaf)
+Legacy endpoints (kept for compatibility):
+
+- `GET /alpha_i/{slot}/{pk}` → raw canonical α‑I `ObexPartRec` bytes (size‑capped)
+- `GET /alpha_iii/{slot}` → concatenated canonical `TicketRecord` leaf bytes (216‑byte leaves)
 - `GET /header/{slot}` → JSON header DTO
-- `POST /header` → accept header DTO, validate deterministically
-- `POST /advance` → deterministically build the next header from current store and persist
-- `GET /metrics` → OpenMetrics text (validation counts, latencies, fetch counts, root build timings)
+- `POST /header` → accept header DTO; validate parent link, slot, version, seed_commit, beacon v1, and root equalities
+- `POST /advance` → deterministically build next header from local state and persist
+- `GET /metrics` → OpenMetrics text (validation counts, average latencies, fetch counts, root build timings)
 - `GET /healthz` → readiness check (genesis present)
+
+Versioned `/v1` endpoints (wallets + explorers):
+
+- Chain/head
+  - `GET /v1/info` → { chain_id, genesis_hash, obex_version, slots_per_sec, head, address_format }
+  - `GET /v1/head` → { slot, header_id }
+  - `GET /v1/headers?from=&to=&limit=&cursor=` → paginated headers (cursor is base64)
+  - `GET /v1/slot/{slot}` → { header, counts: { tickets, participants } }
+
+- Tickets (α‑III)
+  - `GET /v1/alpha_iii/{slot}?limit=&cursor=` → JSON ticket list (216‑byte leaf fields rendered), with cursor pagination
+  - `GET /v1/ticket/{txid}` → resolve ticket by txid with inclusion proof
+  - `GET /v1/proof/ticket/{slot}/{txid}` → Merkle inclusion proof for the ticket leaf
+
+- Participation (α‑I)
+  - `GET /v1/alpha_i_index/{slot}` → JSON list of participant PKs for the slot
+  - `GET /v1/proof/participant/{slot}/{pk}` → Merkle inclusion proof for participant PK leaf
+
+- Wallet lifecycle
+  - `GET /v1/account/{pk}` → { spendable_u, reserved_u, next_nonce } (spendable/reserved scaffolding present; next_nonce derived from observed tickets)
+  - `POST /v1/tx` → submit TxBodyV1 + Ed25519 signature; verifies canonical bytes (TAG_TX_SIG || canonical_tx_bytes) and returns { txid, commit_hash, accepted }
+  - `GET /v1/tx/{txid}` → { status: pending|admitted|rejected, slot? }
+  - `GET /v1/fees` → fee rule disclosure { min_tx_u, flat_switch_u, flat_fee_u, rule }
+
+- Observability/ops
+  - `GET /v1/peers` → public peer list snapshot
+  - `GET /v1/search?q=` → resolve txid|header_id|pk|slot → typed result
+  - `GET /v1/stats/supply` / `participation` / `fees` → basic summaries
+  - `GET /v1/subscribe` → Server‑Sent Events (SSE): `newHead`, `ticketAdmitted`
+
+API semantics:
+
+- Error model: all `/v1` handlers return a uniform JSON error envelope `{ code, error, message, details }` with appropriate HTTP status.
+- Pagination: `cursor` (base64) + `limit` (default 100, max 500) on range list endpoints.
+- Caching: `ETag` + `Cache-Control: public, max-age=5` on read endpoints (non‑streaming).
+- Encodings: all 32‑byte hashes/keys as `0x`‑prefixed lowercase hex; large integers (
+  amounts/fees) serialized as decimal strings.
+
+OpenAPI and SDKs
+
+- OpenAPI 3.1 spec is provided at `API_OPENAPI_v1.yaml` covering all `/v1` endpoints and DTOs.
+- Generate SDKs with OpenAPI Generator (examples):
+  - TypeScript (fetch):
+    - `npx @openapitools/openapi-generator-cli generate -i API_OPENAPI_v1.yaml -g typescript-fetch -o sdk/ts`
+  - Rust:
+    - `npx @openapitools/openapi-generator-cli generate -i API_OPENAPI_v1.yaml -g rust -o sdk/rust`
+  - Go:
+    - `npx @openapitools/openapi-generator-cli generate -i API_OPENAPI_v1.yaml -g go -o sdk/go`
+
+OpenAPI and SDKs
+
+- OpenAPI 3.1 spec is provided at `API_OPENAPI_v1.yaml` documenting all `/v1` endpoints and DTOs.
+- Generate SDKs with OpenAPI Generator (examples):
+  - TypeScript (fetch):
+    - `npx @openapitools/openapi-generator-cli generate -i API_OPENAPI_v1.yaml -g typescript-fetch -o sdk/ts`
+  - Rust:
+    - `npx @openapitools/openapi-generator-cli generate -i API_OPENAPI_v1.yaml -g rust -o sdk/rust`
+  - Go:
+    - `npx @openapitools/openapi-generator-cli generate -i API_OPENAPI_v1.yaml -g go -o sdk/go`
 
 Header‑first puller (current behavior)
 
-- On header acceptance, if `ticket_root` is non‑empty, the node triggers background fetch of α‑III ticket leaves for that slot from configured peers (HTTP client timeout is configurable). Fetched bytes are not persisted by default; JSON logs record success/fail by peer. α‑I record pulling is not enabled by default.
+- On header acceptance, if `ticket_root` is non‑empty, the node triggers background fetch of α‑III ticket leaves from configured peers (with per‑peer concurrency, timeouts, backoff, and temporary banlist). Fetched bytes are persisted to sled and the ticket root is recomputed from disk to re‑validate; JSON logs record success/fail per peer and root mismatch warnings.
+- α‑I participation pulling is available via index/body endpoints; ingestion is push‑based by default.
 
 Local equalities providers
 

@@ -1,1 +1,9 @@
-﻿System_Instructions.md
+# Ignore Rust build outputs
+/obex-alpha/target/
+/obex-alpha/target/**
+
+# Ignore common OS junk
+.DS_Store
+Thumbs.db
+
+

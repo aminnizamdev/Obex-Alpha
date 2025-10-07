@@ -1,0 +1,21 @@
+﻿Obex Alpha â€” Operator Runbook
+
+Start node:
+  obex_node --listen 0.0.0.0:8080 --data-dir data/obex-node --peers <comma-separated URLs>
+
+Health & Observability:
+  GET /healthz â†’ readiness
+  GET /metrics â†’ OpenMetrics text
+
+Endpoints:
+  GET /alpha_i/{slot}/{pk}
+  GET /alpha_i_index/{slot}
+  GET /alpha_iii/{slot}
+  GET /header/{slot}
+  POST /header
+  POST /advance
+
+Notes:
+  - Beacon v1 (hash-edge) enforced
+  - Size caps enforced before crypto
+  - Header-first validation; pulls Î±-III leaves and Î±-I records when peers expose indexes
